@@ -18,6 +18,14 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Restore dependencies cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
       - name: Install dependencies
         run: npm install
 
@@ -47,14 +55,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-modules-
 
-      - name: Verify cache restoration
-        run: |
-          if [ -d "node_modules" ]; then
-            echo "✅ Cache restored successfully"
-          else
-            echo "::error::❌ Cache miss - node_modules not found"
-            exit 1
-          fi
+      - name: Install dependencies
+        run: npm install
 
       - name: Run tests
         run: npm test
