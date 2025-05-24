@@ -37,7 +37,14 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-      
+      - name: Verify cache restoration
+        run: |
+          if [ -d "node_modules" ]; then
+            echo "✅ Cache restored successfully"
+          else
+            echo "::error::❌ Cache miss - node_modules not found"
+            exit 1
+          fi
 
       
       - name: Run tests
