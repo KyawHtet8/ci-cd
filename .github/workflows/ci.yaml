@@ -2,8 +2,7 @@ name: CI Workflow
 
 on:
   pull_request:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -13,14 +12,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Set up Node.js
+      - name: Set up Node.js with cache
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
       
       - name: Install dependencies
-        run: npm install
+        run: npm ci  # Changed from npm install for consistency
       
       - name: Build the project
         run: npm run build
@@ -32,23 +31,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Set up Node.js with cache
-        uses: actions/setup-node@v4
+      - name: Restore cached dependencies
+        uses: actions/cache@v4
+        id: cache
         with:
-          node-version: '20'
-          cache: 'npm'
-      - name: Verify cache restoration
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      
+      - name: Install dependencies if cache missed
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm ci
+      
+      - name: Verify dependencies
         run: |
-          if [ -d "node_modules" ]; then
-            echo "✅ Cache restored successfully"
-          else
-            echo "::error::❌ Cache miss - node_modules not found"
+          if [ ! -d "node_modules" ]; then
+            echo "::error::❌ Dependencies not found"
             exit 1
           fi
-
+          echo "✅ Dependencies verified"
       
       - name: Run tests
         run: npm test
-
-         
-  
